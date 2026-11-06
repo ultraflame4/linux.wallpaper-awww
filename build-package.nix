@@ -16,7 +16,7 @@
 
 rustPlatform.buildRustPackage (finalAttrs: {
   name="wallpaper-switcher";
-  version="0.1.0";
+  version="0.1.1";
   pname=finalAttrs.name;
 
   # Assuming our app's frontend uses `npm` as a package manager
