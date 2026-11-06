@@ -3,6 +3,7 @@
   import TopBar from "$lib/components/TopBar.svelte";
   import WallpaperGrid from "$lib/components/WallpaperGrid.svelte";
   import DownloadBar from "$lib/components/DownloadBar.svelte";
+  import PreviewModal from "$lib/components/PreviewModal.svelte";
 
   interface WallpaperEntry {
     name: string;
@@ -17,6 +18,10 @@
 
   let imageCache = $state<Record<string, string>>({});
 
+  // Preview state
+  let previewEntry = $state<WallpaperEntry | null>(null);
+  let previewSrc = $state<string>("");
+
   async function loadWallpapers() {
     loading = true;
     error = null;
@@ -28,17 +33,6 @@
       error = String(e);
     } finally {
       loading = false;
-    }
-  }
-
-  async function setWallpaper(entry: WallpaperEntry) {
-    statusMsg = null;
-    try {
-      const msg = await invoke<string>("set_wallpaper", { path: entry.path });
-      currentWallpaper = entry.path;
-      statusMsg = msg;
-    } catch (e) {
-      statusMsg = `Error: ${e}`;
     }
   }
 
@@ -58,6 +52,23 @@
     const dataUrl = await invoke<string>("read_image", { path });
     imageCache = { ...imageCache, [path]: dataUrl };
     return dataUrl;
+  }
+
+  async function openPreview(entry: WallpaperEntry) {
+    previewEntry = entry;
+    previewSrc = imageCache[entry.path] || "";
+    if (!previewSrc) {
+      previewSrc = await loadImage(entry.path);
+    }
+  }
+
+  function closePreview() {
+    previewEntry = null;
+    previewSrc = "";
+    // Refresh current wallpaper in case it changed
+    invoke<string | null>("get_current_wallpaper").then((c) => {
+      currentWallpaper = c;
+    });
   }
 
   $effect(() => {
@@ -91,10 +102,14 @@
         {wallpapers}
         {currentWallpaper}
         {loadImage}
-        onSelect={setWallpaper}
+        onPreview={openPreview}
       />
     {/if}
   </main>
 
   <DownloadBar onDownload={downloadWallpaper} />
 </div>
+
+{#if previewEntry && previewSrc}
+  <PreviewModal entry={previewEntry} imageSrc={previewSrc} onClose={closePreview} />
+{/if}

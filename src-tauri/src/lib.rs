@@ -2,6 +2,7 @@ mod wallpaper;
 
 use std::fs;
 use std::path::PathBuf;
+use std::process::Command;
 use std::sync::Mutex;
 
 use base64::Engine;
@@ -210,6 +211,31 @@ fn read_image(path: String) -> Result<String, String> {
     Ok(format!("data:{mime};base64,{b64}"))
 }
 
+#[tauri::command]
+fn open_wallpapers_folder() -> Result<(), String> {
+    let dir = wallpapers_dir();
+    fs::create_dir_all(&dir).map_err(|e| format!("Cannot create dir: {e}"))?;
+    Command::new("xdg-open")
+        .arg(&dir)
+        .spawn()
+        .map_err(|e| format!("Failed to open folder: {e}"))?;
+    Ok(())
+}
+
+#[tauri::command]
+fn open_in_folder(path: String) -> Result<(), String> {
+    let path = PathBuf::from(&path);
+    let parent = path
+        .parent()
+        .map(|p| p.to_path_buf())
+        .unwrap_or_else(|| PathBuf::from("/"));
+    Command::new("xdg-open")
+        .arg(&parent)
+        .spawn()
+        .map_err(|e| format!("Failed to open folder: {e}"))?;
+    Ok(())
+}
+
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
     let backend: Box<dyn WallpaperBackend> = if AwwwBackend::is_available() {
@@ -246,6 +272,8 @@ pub fn run() {
             get_current_wallpaper,
             download_wallpaper,
             read_image,
+            open_wallpapers_folder,
+            open_in_folder,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
