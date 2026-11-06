@@ -48,6 +48,10 @@
         RUST_LOG = "debug";
         RUST_SRC_PATH = "${pkgs.rust.packages.stable.rustPlatform.rustLibSrc}";
         LD_LIBRARY_PATH = libPath;
+
+        shellHook = ''
+          export XDG_DATA_DIRS="$GSETTINGS_SCHEMAS_PATH" # Needed on Wayland to report the correct display scale
+        '';
       };
     };
 }
