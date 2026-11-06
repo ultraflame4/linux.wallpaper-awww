@@ -23,7 +23,7 @@ rustPlatform.buildRustPackage (finalAttrs: {
   npmDeps = fetchNpmDeps {
     name = "${finalAttrs.pname}-${finalAttrs.version}-npm-deps";
     inherit (finalAttrs) src;
-    
+    hash = "sha256-1ryy7/Rpbma4r1IGH9xEatkJJ8CZcbU4Cgi+BsHSnog=";
   };
 
   nativeBuildInputs = [
