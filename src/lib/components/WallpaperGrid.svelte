@@ -34,6 +34,38 @@
     });
 </script>
 
+{#snippet wallpaperItem(entry: WallpaperEntry)}
+    {@const isCurrent = currentWallpaper === entry.path}
+    {@const src = images[entry.path]}
+    <button
+        class="group relative aspect-[16/10] rounded-lg overflow-hidden border-2 transition-all duration-150 cursor-pointer
+            {isCurrent
+                ? 'border-emerald-500/70 ring-1 ring-emerald-500/30'
+                : 'border-neutral-750 hover:border-neutral-550'}"
+        onclick={() => onPreview(entry)}
+    >
+        {#if src}
+            <img {src} alt={entry.name} class="w-full h-full object-cover" />
+        {:else}
+            <div class="w-full h-full bg-neutral-800 flex items-center justify-center">
+                <div class="w-5 h-5 border-2 border-neutral-600 border-t-neutral-400 rounded-full animate-spin"></div>
+            </div>
+        {/if}
+
+        <div class="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-colors"></div>
+
+        {#if isCurrent}
+            <div class="absolute top-1.5 left-1.5 bg-emerald-500 text-white text-[10px] font-medium px-1.5 py-0.5 rounded">
+                Active
+            </div>
+        {/if}
+
+        <div class="absolute bottom-0 left-0 right-0 p-1.5 bg-gradient-to-t from-black/70 to-transparent opacity-0 group-hover:opacity-100 transition-opacity">
+            <p class="text-[11px] text-white truncate leading-tight">{entry.name}</p>
+        </div>
+    </button>
+{/snippet}
+
 {#if wallpapers.length === 0}
     <div class="flex-1 flex items-center justify-center">
         <div class="text-center">
@@ -58,57 +90,9 @@
     </div>
 {:else}
     <div class="flex-1 overflow-y-auto p-4">
-        <div
-            class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3"
-        >
+        <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3">
             {#each wallpapers as entry (entry.path)}
-                {@const isCurrent = currentWallpaper === entry.path}
-                {@const src = images[entry.path]}
-                <button
-                    class="group relative aspect-16/10 rounded-lg overflow-hidden border-2 transition-all duration-150 cursor-pointer
-            {isCurrent
-                        ? 'border-emerald-500/70 ring-1 ring-emerald-500/30'
-                        : 'border-neutral-750 hover:border-neutral-550'}"
-                    onclick={() => onPreview(entry)}
-                >
-                    {#if src}
-                        <img
-                            {src}
-                            alt={entry.name}
-                            class="w-full h-full object-cover"
-                        />
-                    {:else}
-                        <div
-                            class="w-full h-full bg-neutral-800 flex items-center justify-center"
-                        >
-                            <div
-                                class="w-5 h-5 border-2 border-neutral-600 border-t-neutral-400 rounded-full animate-spin"
-                            ></div>
-                        </div>
-                    {/if}
-
-                    <div
-                        class="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-colors"
-                    ></div>
-
-                    {#if isCurrent}
-                        <div
-                            class="absolute top-1.5 left-1.5 bg-emerald-500 text-white text-[10px] font-medium px-1.5 py-0.5 rounded"
-                        >
-                            Active
-                        </div>
-                    {/if}
-
-                    <div
-                        class="absolute bottom-0 left-0 right-0 p-1.5 bg-gradient-to-t from-black/70 to-transparent opacity-0 group-hover:opacity-100 transition-opacity"
-                    >
-                        <p
-                            class="text-[11px] text-white truncate leading-tight"
-                        >
-                            {entry.name}
-                        </p>
-                    </div>
-                </button>
+                {@render wallpaperItem(entry)}
             {/each}
         </div>
     </div>
