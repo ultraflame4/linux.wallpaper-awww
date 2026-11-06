@@ -1,9 +1,10 @@
 <script lang="ts">
+  import "@fontsource/poppins";
   import "../app.css";
   import { addCollection } from "@iconify/svelte";
-  import phosphor from "@iconify-json/ph";
+  import {icons as phosphor} from "@iconify-json/ph";
 
-  addCollection(phosphor.icons);
+  addCollection(phosphor);
 
   let { children } = $props();
 </script>
