@@ -14,7 +14,8 @@
   },
   "license": "MIT",
   "dependencies": {
-    "@fontsource/poppins": "^5.3.0",
+    "@fontsource-variable/open-sans": "^5.3.0",
+    "@fontsource-variable/roboto": "^5.3.0",
     "@iconify-json/ph": "^1.2.2",
     "@iconify/svelte": "^5.2.4",
     "@tailwindcss/vite": "^4.3.4",

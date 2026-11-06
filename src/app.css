@@ -9,12 +9,13 @@
 
 html, body {
   height: 100%;
+  font-weight: 500;
   margin: 0;
 }
 
 body {
   @apply bg-neutral-925 text-neutral-200 antialiased;
-  font-family: "Poppins", system-ui, -apple-system, sans-serif;
+  font-family: "Open Sans Variable", system-ui, -apple-system, sans-serif;
 }
 
 /* Custom scrollbar for dark theme */
