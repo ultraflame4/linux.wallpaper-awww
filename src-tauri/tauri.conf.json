@@ -12,13 +12,19 @@
   "app": {
     "windows": [
       {
-        "title": "wallpaper-switcher",
-        "width": 800,
-        "height": 600
+        "title": "Wallpaper Switcher",
+        "width": 960,
+        "height": 680,
+        "minWidth": 640,
+        "minHeight": 480
       }
     ],
     "security": {
-      "csp": null
+      "csp": null,
+      "assetProtocol": {
+        "enable": true,
+        "scope": ["**"]
+      }
     }
   },
   "bundle": {
