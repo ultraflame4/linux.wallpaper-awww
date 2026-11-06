@@ -7,16 +7,38 @@
   let {
     wallpapers,
     currentWallpaper,
-    srcFor,
+    loadThumbnail,
     onSelect,
   }: {
     wallpapers: WallpaperEntry[];
     currentWallpaper: string | null;
-    srcFor: (path: string) => string;
+    loadThumbnail: (path: string) => Promise<string>;
     onSelect: (entry: WallpaperEntry) => void;
   } = $props();
 
   let selected = $state<string | null>(null);
+
+  // Load thumbnails lazily as entries come into view
+  let thumbnails = $state<Record<string, string>>({});
+  let loadingPaths = $state<Set<string>>(new Set());
+
+  async function ensureThumbnail(path: string) {
+    if (thumbnails[path] || loadingPaths.has(path)) return;
+    loadingPaths = new Set([...loadingPaths, path]);
+    try {
+      const url = await loadThumbnail(path);
+      thumbnails = { ...thumbnails, [path]: url };
+    } finally {
+      loadingPaths = new Set([...loadingPaths].filter((p) => p !== path));
+    }
+  }
+
+  // Trigger thumbnail loading when wallpapers change
+  $effect(() => {
+    for (const entry of wallpapers) {
+      ensureThumbnail(entry.path);
+    }
+  });
 </script>
 
 {#if wallpapers.length === 0}
@@ -36,8 +58,9 @@
       {#each wallpapers as entry (entry.path)}
         {@const isCurrent = currentWallpaper === entry.path}
         {@const isSelected = selected === entry.path}
+        {@const src = thumbnails[entry.path]}
         <button
-          class="group relative aspect-[16/10] rounded-lg overflow-hidden border-2 transition-all duration-150
+          class="group relative aspect-16/10 rounded-lg overflow-hidden border-2 transition-all duration-150
             {isCurrent
               ? 'border-emerald-500/70 ring-1 ring-emerald-500/30'
               : isSelected
@@ -48,12 +71,17 @@
             onSelect(entry);
           }}
         >
-          <img
-            src={srcFor(entry.path)}
-            alt={entry.name}
-            class="w-full h-full object-cover"
-            loading="lazy"
-          />
+          {#if src}
+            <img
+              src={src}
+              alt={entry.name}
+              class="w-full h-full object-cover"
+            />
+          {:else}
+            <div class="w-full h-full bg-neutral-800 flex items-center justify-center">
+              <div class="w-5 h-5 border-2 border-neutral-600 border-t-neutral-400 rounded-full animate-spin"></div>
+            </div>
+          {/if}
 
           <!-- Overlay on hover -->
           <div class="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-colors"></div>

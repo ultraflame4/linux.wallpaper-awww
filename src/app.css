@@ -7,6 +7,11 @@
   --color-neutral-650: #3a3a42;
 }
 
+html, body {
+  height: 100%;
+  margin: 0;
+}
+
 body {
   @apply bg-neutral-925 text-neutral-200 antialiased;
   font-family: Inter, system-ui, -apple-system, sans-serif;

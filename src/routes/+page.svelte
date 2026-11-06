@@ -1,6 +1,5 @@
 <script lang="ts">
   import { invoke } from "@tauri-apps/api/core";
-  import { convertFileSrc } from "@tauri-apps/api/core";
   import TopBar from "$lib/components/TopBar.svelte";
   import WallpaperGrid from "$lib/components/WallpaperGrid.svelte";
   import DownloadBar from "$lib/components/DownloadBar.svelte";
@@ -16,13 +15,18 @@
   let error = $state<string | null>(null);
   let statusMsg = $state<string | null>(null);
 
+  // Cache of path -> data URL
+  let thumbCache = $state<Record<string, string>>({});
+
   async function loadWallpapers() {
+    console.log("Loading wallpapers")
     loading = true;
     error = null;
     try {
       wallpapers = await invoke<WallpaperEntry[]>("list_wallpapers");
       const current = await invoke<string | null>("get_current_wallpaper");
       currentWallpaper = current;
+      console.log("Loaded wallpapers", wallpapers)
     } catch (e) {
       error = String(e);
     } finally {
@@ -52,8 +56,11 @@
     }
   }
 
-  function srcFor(path: string): string {
-    return convertFileSrc(path);
+  async function loadThumbnail(path: string): Promise<string> {
+    if (thumbCache[path]) return thumbCache[path];
+    const dataUrl = await invoke<string>("read_thumbnail", { path });
+    thumbCache = { ...thumbCache, [path]: dataUrl };
+    return dataUrl;
   }
 
   $effect(() => {
@@ -61,7 +68,7 @@
   });
 </script>
 
-<div class="flex flex-col h-screen">
+<div class="flex flex-col h-full">
   <TopBar {statusMsg} />
 
   <main class="flex-1 overflow-hidden flex flex-col">
@@ -86,7 +93,7 @@
       <WallpaperGrid
         {wallpapers}
         {currentWallpaper}
-        {srcFor}
+        {loadThumbnail}
         onSelect={setWallpaper}
       />
     {/if}

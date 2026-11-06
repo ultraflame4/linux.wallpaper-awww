@@ -1,8 +1,11 @@
 mod wallpaper;
 
 use std::fs;
+use std::io::Read;
 use std::path::PathBuf;
 use std::sync::Mutex;
+
+use base64::Engine;
 
 use wallpaper::WallpaperBackend;
 use wallpaper::awww::AwwwBackend;
@@ -49,6 +52,7 @@ fn list_wallpapers() -> Result<Vec<WallpaperEntry>, String> {
     }
 
     entries.sort_by(|a, b| a.name.to_lowercase().cmp(&b.name.to_lowercase()));
+    println!("Found wallpapers: {entries:#?}");
     Ok(entries)
 }
 
@@ -174,10 +178,42 @@ fn validate_image(bytes: &[u8]) -> Result<(), String> {
     }
 }
 
-#[derive(serde::Serialize, serde::Deserialize, Clone)]
+#[derive(serde::Serialize, serde::Deserialize, Clone, Debug)]
 struct WallpaperEntry {
     name: String,
     path: String,
+}
+
+#[tauri::command]
+fn read_thumbnail(path: String) -> Result<String, String> {
+    let path = PathBuf::from(&path);
+    if !path.exists() {
+        return Err(format!("File not found: {}", path.display()));
+    }
+
+    let file = fs::File::open(&path).map_err(|e| format!("Cannot open file: {e}"))?;
+    let mut buf = Vec::new();
+    // Read at most 256KB for thumbnail — enough for a small preview
+    file.take(256 * 1024)
+        .read_to_end(&mut buf)
+        .map_err(|e| format!("Cannot read file: {e}"))?;
+
+    let ext = path
+        .extension()
+        .and_then(|e| e.to_str())
+        .unwrap_or("jpg")
+        .to_lowercase();
+
+    let mime = match ext.as_str() {
+        "png" => "image/png",
+        "webp" => "image/webp",
+        "bmp" => "image/bmp",
+        "gif" => "image/gif",
+        _ => "image/jpeg",
+    };
+
+    let b64 = base64::engine::general_purpose::STANDARD.encode(&buf);
+    Ok(format!("data:{mime};base64,{b64}"))
 }
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
@@ -215,6 +251,7 @@ pub fn run() {
             set_wallpaper,
             get_current_wallpaper,
             download_wallpaper,
+            read_thumbnail,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
