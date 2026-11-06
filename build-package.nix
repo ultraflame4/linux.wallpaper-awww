@@ -15,7 +15,7 @@
 }@pkgs:
 
 rustPlatform.buildRustPackage (finalAttrs: {
-  name="wallpaper-switcher-ultr42";
+  name="wallpaper-switcher";
   version="0.1.0";
   pname=finalAttrs.name;
 
