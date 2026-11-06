@@ -80,7 +80,7 @@
     </div>
 {:else}
     <div class="flex-1 overflow-y-auto p-4">
-        <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3">
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3">
             {#each wallpapers as entry (entry.path)}
                 {@render wallpaperItem(entry)}
             {/each}
