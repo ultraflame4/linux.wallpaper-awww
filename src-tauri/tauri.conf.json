@@ -13,10 +13,12 @@
     "windows": [
       {
         "title": "Wallpaper Switcher",
-        "width": 960,
-        "height": 680,
         "minWidth": 640,
-        "minHeight": 480
+        "minHeight": 480,
+        "alwaysOnTop": true,
+        "transparent": true,
+        "resizable": true
+        
       }
     ],
     "security": {
