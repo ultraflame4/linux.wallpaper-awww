@@ -23,16 +23,9 @@ pub fn list_wallpapers() -> Result<Vec<WallpaperEntry>, String> {
         if path.is_file() {
             if let Some(ext) = path.extension().and_then(|e| e.to_str()) {
                 let ext_lower = ext.to_lowercase();
-                if matches!(
-                    ext_lower.as_str(),
-                    "jpg" | "jpeg" | "png" | "webp" | "bmp" | "gif"
-                ) {
+                if crate::utils::is_known_ext(&ext_lower) {
                     entries.push(WallpaperEntry {
-                        name: path
-                            .file_name()
-                            .unwrap_or_default()
-                            .to_string_lossy()
-                            .into_owned(),
+                        name: entry.file_name().to_string_lossy().into_owned(),
                         path: path.to_string_lossy().into_owned(),
                     });
                 }
