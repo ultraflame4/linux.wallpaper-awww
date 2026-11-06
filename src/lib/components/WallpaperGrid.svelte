@@ -7,37 +7,31 @@
   let {
     wallpapers,
     currentWallpaper,
-    loadThumbnail,
+    loadImage,
     onSelect,
   }: {
     wallpapers: WallpaperEntry[];
     currentWallpaper: string | null;
-    loadThumbnail: (path: string) => Promise<string>;
+    loadImage: (path: string) => Promise<string>;
     onSelect: (entry: WallpaperEntry) => void;
   } = $props();
 
   let selected = $state<string | null>(null);
+  let images = $state<Record<string, string>>({});
+  let pending = $state<Set<string>>(new Set());
 
-  // Load thumbnails lazily as entries come into view
-  let thumbnails = $state<Record<string, string>>({});
-  let loadingPaths = $state<Set<string>>(new Set());
-
-  async function ensureThumbnail(path: string) {
-    if (thumbnails[path] || loadingPaths.has(path)) return;
-    loadingPaths = new Set([...loadingPaths, path]);
+  async function fetch(path: string) {
+    if (images[path] || pending.has(path)) return;
+    pending = new Set([...pending, path]);
     try {
-      const url = await loadThumbnail(path);
-      thumbnails = { ...thumbnails, [path]: url };
+      images = { ...images, [path]: await loadImage(path) };
     } finally {
-      loadingPaths = new Set([...loadingPaths].filter((p) => p !== path));
+      pending = new Set([...pending].filter((p) => p !== path));
     }
   }
 
-  // Trigger thumbnail loading when wallpapers change
   $effect(() => {
-    for (const entry of wallpapers) {
-      ensureThumbnail(entry.path);
-    }
+    for (const e of wallpapers) fetch(e.path);
   });
 </script>
 
@@ -58,9 +52,9 @@
       {#each wallpapers as entry (entry.path)}
         {@const isCurrent = currentWallpaper === entry.path}
         {@const isSelected = selected === entry.path}
-        {@const src = thumbnails[entry.path]}
+        {@const src = images[entry.path]}
         <button
-          class="group relative aspect-16/10 rounded-lg overflow-hidden border-2 transition-all duration-150
+          class="group relative aspect-[16/10] rounded-lg overflow-hidden border-2 transition-all duration-150
             {isCurrent
               ? 'border-emerald-500/70 ring-1 ring-emerald-500/30'
               : isSelected
@@ -72,28 +66,21 @@
           }}
         >
           {#if src}
-            <img
-              src={src}
-              alt={entry.name}
-              class="w-full h-full object-cover"
-            />
+            <img src={src} alt={entry.name} class="w-full h-full object-cover" />
           {:else}
             <div class="w-full h-full bg-neutral-800 flex items-center justify-center">
               <div class="w-5 h-5 border-2 border-neutral-600 border-t-neutral-400 rounded-full animate-spin"></div>
             </div>
           {/if}
 
-          <!-- Overlay on hover -->
           <div class="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-colors"></div>
 
-          <!-- Current indicator -->
           {#if isCurrent}
             <div class="absolute top-1.5 left-1.5 bg-emerald-500 text-white text-[10px] font-medium px-1.5 py-0.5 rounded">
               Active
             </div>
           {/if}
 
-          <!-- Name on hover -->
           <div class="absolute bottom-0 left-0 right-0 p-1.5 bg-gradient-to-t from-black/70 to-transparent opacity-0 group-hover:opacity-100 transition-opacity">
             <p class="text-[11px] text-white truncate leading-tight">{entry.name}</p>
           </div>

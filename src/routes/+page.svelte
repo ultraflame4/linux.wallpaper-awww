@@ -15,18 +15,15 @@
   let error = $state<string | null>(null);
   let statusMsg = $state<string | null>(null);
 
-  // Cache of path -> data URL
-  let thumbCache = $state<Record<string, string>>({});
+  let imageCache = $state<Record<string, string>>({});
 
   async function loadWallpapers() {
-    console.log("Loading wallpapers")
     loading = true;
     error = null;
     try {
       wallpapers = await invoke<WallpaperEntry[]>("list_wallpapers");
       const current = await invoke<string | null>("get_current_wallpaper");
       currentWallpaper = current;
-      console.log("Loaded wallpapers", wallpapers)
     } catch (e) {
       error = String(e);
     } finally {
@@ -56,10 +53,10 @@
     }
   }
 
-  async function loadThumbnail(path: string): Promise<string> {
-    if (thumbCache[path]) return thumbCache[path];
-    const dataUrl = await invoke<string>("read_thumbnail", { path });
-    thumbCache = { ...thumbCache, [path]: dataUrl };
+  async function loadImage(path: string): Promise<string> {
+    if (imageCache[path]) return imageCache[path];
+    const dataUrl = await invoke<string>("read_image", { path });
+    imageCache = { ...imageCache, [path]: dataUrl };
     return dataUrl;
   }
 
@@ -93,7 +90,7 @@
       <WallpaperGrid
         {wallpapers}
         {currentWallpaper}
-        {loadThumbnail}
+        {loadImage}
         onSelect={setWallpaper}
       />
     {/if}

@@ -1,7 +1,6 @@
 mod wallpaper;
 
 use std::fs;
-use std::io::Read;
 use std::path::PathBuf;
 use std::sync::Mutex;
 
@@ -185,18 +184,13 @@ struct WallpaperEntry {
 }
 
 #[tauri::command]
-fn read_thumbnail(path: String) -> Result<String, String> {
+fn read_image(path: String) -> Result<String, String> {
     let path = PathBuf::from(&path);
     if !path.exists() {
         return Err(format!("File not found: {}", path.display()));
     }
 
-    let file = fs::File::open(&path).map_err(|e| format!("Cannot open file: {e}"))?;
-    let mut buf = Vec::new();
-    // Read at most 256KB for thumbnail — enough for a small preview
-    file.take(256 * 1024)
-        .read_to_end(&mut buf)
-        .map_err(|e| format!("Cannot read file: {e}"))?;
+    let bytes = fs::read(&path).map_err(|e| format!("Cannot read file: {e}"))?;
 
     let ext = path
         .extension()
@@ -212,7 +206,7 @@ fn read_thumbnail(path: String) -> Result<String, String> {
         _ => "image/jpeg",
     };
 
-    let b64 = base64::engine::general_purpose::STANDARD.encode(&buf);
+    let b64 = base64::engine::general_purpose::STANDARD.encode(&bytes);
     Ok(format!("data:{mime};base64,{b64}"))
 }
 
@@ -251,7 +245,7 @@ pub fn run() {
             set_wallpaper,
             get_current_wallpaper,
             download_wallpaper,
-            read_thumbnail,
+            read_image,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
