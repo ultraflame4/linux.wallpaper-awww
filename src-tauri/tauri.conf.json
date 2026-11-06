@@ -12,7 +12,7 @@
   "app": {
     "windows": [
       {
-        "title": "Wallpaper Switcher",
+        "title": "Wallpapers",
         "minWidth": 640,
         "minHeight": 480,
         "alwaysOnTop": true,
