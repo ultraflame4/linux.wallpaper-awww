@@ -1,3 +1,7 @@
+# Github - Mirror Notice
+This version on github is a mirror from a private repository.
+This is done to grant access to the project from my other nixos flakes.
+
 # Wallpaper Switcher
 
 A Tauri v2 desktop app for browsing, downloading, and setting wallpapers on Wayland via the `awww` daemon.
