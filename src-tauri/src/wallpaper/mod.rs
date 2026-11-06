@@ -1,6 +1,6 @@
 use std::path::PathBuf;
 
-pub mod swww;
+pub mod awww;
 
 /// Represents a wallpaper backend that can set and query the current wallpaper.
 pub trait WallpaperBackend: Send + Sync {
@@ -10,6 +10,6 @@ pub trait WallpaperBackend: Send + Sync {
     /// Get the path of the currently active wallpaper, if any.
     fn current(&self) -> Result<Option<PathBuf>, String>;
 
-    /// Human-readable name for the backend (e.g. "swww").
+    /// Human-readable name for the backend (e.g. "awww").
     fn name(&self) -> &'static str;
 }

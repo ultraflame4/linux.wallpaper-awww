@@ -5,7 +5,7 @@ use std::path::PathBuf;
 use std::sync::Mutex;
 
 use wallpaper::WallpaperBackend;
-use wallpaper::swww::SwwwBackend;
+use wallpaper::awww::AwwwBackend;
 
 struct AppState {
     backend: Box<dyn WallpaperBackend>,
@@ -182,17 +182,17 @@ struct WallpaperEntry {
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
-    let backend: Box<dyn WallpaperBackend> = if SwwwBackend::is_available() {
-        let b = SwwwBackend::new();
+    let backend: Box<dyn WallpaperBackend> = if AwwwBackend::is_available() {
+        let b = AwwwBackend::new();
         println!("Wallpaper backend: {}", b.name());
         Box::new(b)
     } else {
-        eprintln!("Warning: swww not found. Wallpaper setting will not work.");
+        eprintln!("Warning: awww not found. Wallpaper setting will not work.");
         // Use a no-op backend that just logs errors
         struct NoopBackend;
         impl WallpaperBackend for NoopBackend {
             fn set(&self, _path: &PathBuf) -> Result<(), String> {
-                Err("No wallpaper backend available. Please install swww.".into())
+                Err("No wallpaper backend available. Please install awww.".into())
             }
             fn current(&self) -> Result<Option<PathBuf>, String> {
                 Ok(None)
