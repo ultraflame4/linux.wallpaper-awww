@@ -99,17 +99,22 @@ async fn download_wallpaper(url: String) -> Result<WallpaperEntry, String> {
         return Err(format!("HTTP error: {}", response.status()));
     }
 
-    // Derive filename from URL or Content-Disposition header
-    let filename = derive_filename(&url, &response);
-    let filepath = dir.join(&filename);
+    let content_type = response
+        .headers()
+        .get("content-type")
+        .and_then(|v| v.to_str().ok())
+        .unwrap_or("")
+        .to_string();
 
     let bytes = response
         .bytes()
         .await
         .map_err(|e| format!("Failed to read response: {e}"))?;
 
-    // Basic validation: check magic bytes for common image formats
     validate_image(&bytes)?;
+
+    let filename = derive_filename(&url, &content_type, &bytes);
+    let filepath = dir.join(&filename);
 
     fs::write(&filepath, &bytes).map_err(|e| format!("Failed to save file: {e}"))?;
 
@@ -119,33 +124,67 @@ async fn download_wallpaper(url: String) -> Result<WallpaperEntry, String> {
     })
 }
 
-fn derive_filename(url: &str, response: &reqwest::Response) -> String {
-    // Try Content-Disposition header first
-    if let Some(disp) = response.headers().get("content-disposition") {
-        if let Ok(disp_str) = disp.to_str() {
-            for part in disp_str.split(';') {
-                let part = part.trim();
-                if let Some(fname) = part.strip_prefix("filename=") {
-                    let fname = fname.trim_matches('"').trim_matches('\'');
-                    if !fname.is_empty() {
-                        return sanitize_filename(fname);
-                    }
-                }
-            }
-        }
+fn mime_to_ext(content_type: &str) -> &str {
+    if content_type.contains("image/png") {
+        "png"
+    } else if content_type.contains("image/webp") {
+        "webp"
+    } else if content_type.contains("image/bmp") {
+        "bmp"
+    } else if content_type.contains("image/gif") {
+        "gif"
+    } else if content_type.contains("image/jpeg") || content_type.contains("image/jpg") {
+        "jpg"
+    } else {
+        "jpg"
     }
+}
 
-    // Fall back to URL path segment
-    let path = url.split('?').next().unwrap_or(url);
-    if let Some(segment) = path.rsplit('/').next() {
-        if !segment.is_empty() {
-            let decoded = urlencoding::decode(segment).unwrap_or_else(|_| segment.into());
-            return sanitize_filename(&decoded);
-        }
+fn detect_ext_from_bytes(bytes: &[u8]) -> &str {
+    if bytes.starts_with(b"\x89PNG") {
+        "png"
+    } else if bytes.starts_with(b"RIFF") && bytes.len() > 8 {
+        "webp"
+    } else if bytes.starts_with(b"BM") {
+        "bmp"
+    } else if bytes.starts_with(b"GIF8") {
+        "gif"
+    } else {
+        "jpg"
     }
+}
 
-    // Final fallback
-    format!("wallpaper_{}.jpg", chrono::Utc::now().timestamp())
+fn derive_filename(url: &str, content_type: &str, bytes: &[u8]) -> String {
+    let ext = if !content_type.is_empty() {
+        mime_to_ext(content_type)
+    } else {
+        detect_ext_from_bytes(bytes)
+    };
+
+    // Try Content-Disposition header first (handled via content_type param now,
+    // but we still extract the base name from the URL)
+    let base = url
+        .split('?')
+        .next()
+        .unwrap_or(url)
+        .rsplit('/')
+        .next()
+        .filter(|s| !s.is_empty());
+
+    let stem = if let Some(segment) = base {
+        let decoded = urlencoding::decode(segment).unwrap_or_else(|_| segment.into());
+        // Strip any existing extension
+        let without_ext = if let Some(dot) = decoded.rfind('.') {
+            &decoded[..dot]
+        } else {
+            &decoded
+        };
+        sanitize_filename(without_ext)
+    } else {
+        format!("wallpaper_{}", chrono::Utc::now().timestamp())
+    };
+
+    format!("{stem}.{ext}")
 }
 
 fn sanitize_filename(name: &str) -> String {
@@ -236,6 +275,38 @@ fn open_in_folder(path: String) -> Result<(), String> {
     Ok(())
 }
 
+#[tauri::command]
+async fn preview_url(url: String) -> Result<String, String> {
+    let response = reqwest::get(&url)
+        .await
+        .map_err(|e| format!("Failed to fetch URL: {e}"))?;
+
+    if !response.status().is_success() {
+        return Err(format!("HTTP error: {}", response.status()));
+    }
+
+    let content_type = response
+        .headers()
+        .get("content-type")
+        .and_then(|v| v.to_str().ok())
+        .unwrap_or("image/jpeg")
+        .to_string();
+
+    if !content_type.starts_with("image/") {
+        return Err("URL does not point to an image".into());
+    }
+
+    let bytes = response
+        .bytes()
+        .await
+        .map_err(|e| format!("Failed to read response: {e}"))?;
+
+    validate_image(&bytes)?;
+
+    let b64 = base64::engine::general_purpose::STANDARD.encode(&bytes);
+    Ok(format!("data:{content_type};base64,{b64}"))
+}
+
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
     let backend: Box<dyn WallpaperBackend> = if AwwwBackend::is_available() {
@@ -274,6 +345,7 @@ pub fn run() {
             read_image,
             open_wallpapers_folder,
             open_in_folder,
+            preview_url,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

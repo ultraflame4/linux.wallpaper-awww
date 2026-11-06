@@ -2,8 +2,8 @@
   import { invoke } from "@tauri-apps/api/core";
   import TopBar from "$lib/components/TopBar.svelte";
   import WallpaperGrid from "$lib/components/WallpaperGrid.svelte";
-  import DownloadBar from "$lib/components/DownloadBar.svelte";
   import PreviewModal from "$lib/components/PreviewModal.svelte";
+  import DownloadModal from "$lib/components/DownloadModal.svelte";
 
   interface WallpaperEntry {
     name: string;
@@ -22,6 +22,9 @@
   let previewEntry = $state<WallpaperEntry | null>(null);
   let previewSrc = $state<string>("");
 
+  // Download modal state
+  let showDownload = $state(false);
+
   async function loadWallpapers() {
     loading = true;
     error = null;
@@ -33,17 +36,6 @@
       error = String(e);
     } finally {
       loading = false;
-    }
-  }
-
-  async function downloadWallpaper(url: string) {
-    statusMsg = null;
-    try {
-      const entry = await invoke<WallpaperEntry>("download_wallpaper", { url });
-      wallpapers = [...wallpapers, entry];
-      statusMsg = `Downloaded: ${entry.name}`;
-    } catch (e) {
-      statusMsg = `Download failed: ${e}`;
     }
   }
 
@@ -65,10 +57,14 @@
   function closePreview() {
     previewEntry = null;
     previewSrc = "";
-    // Refresh current wallpaper in case it changed
     invoke<string | null>("get_current_wallpaper").then((c) => {
       currentWallpaper = c;
     });
+  }
+
+  function handleDownloaded(entry: WallpaperEntry) {
+    wallpapers = [...wallpapers, entry];
+    statusMsg = `Downloaded: ${entry.name}`;
   }
 
   $effect(() => {
@@ -77,7 +73,7 @@
 </script>
 
 <div class="flex flex-col h-full">
-  <TopBar {statusMsg} />
+  <TopBar {statusMsg} onOpenDownload={() => (showDownload = true)} />
 
   <main class="flex-1 overflow-hidden flex flex-col">
     {#if loading}
@@ -106,10 +102,15 @@
       />
     {/if}
   </main>
-
-  <DownloadBar onDownload={downloadWallpaper} />
 </div>
 
 {#if previewEntry && previewSrc}
   <PreviewModal entry={previewEntry} imageSrc={previewSrc} onClose={closePreview} />
+{/if}
+
+{#if showDownload}
+  <DownloadModal
+    onClose={() => (showDownload = false)}
+    onDownloaded={handleDownloaded}
+  />
 {/if}
