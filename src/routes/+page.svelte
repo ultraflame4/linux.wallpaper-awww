@@ -57,9 +57,7 @@
   function closePreview() {
     previewEntry = null;
     previewSrc = "";
-    invoke<string | null>("get_current_wallpaper").then((c) => {
-      currentWallpaper = c;
-    });
+
   }
 
   function handleDownloaded(entry: WallpaperEntry) {

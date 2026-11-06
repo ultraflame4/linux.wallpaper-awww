@@ -63,8 +63,9 @@ pub fn set_wallpaper(path: String, state: tauri::State<'_, AppState>) -> Result<
 
 #[tauri::command]
 pub fn get_current_wallpaper(state: tauri::State<'_, AppState>) -> Result<Option<String>, String> {
-    if let Ok(Some(path)) = state.backend.current() {
-        return Ok(Some(path.to_string_lossy().into_owned()));
+    match state.backend.current() {
+        Ok(Some(path)) => return Ok(Some(path.to_string_lossy().into_owned())),
+        e => eprintln!("Failed to get current wallpaper {e:?}"),
     }
     if let Ok(guard) = state.current_wallpaper.lock() {
         return Ok(guard.as_ref().map(|p| p.to_string_lossy().into_owned()));
