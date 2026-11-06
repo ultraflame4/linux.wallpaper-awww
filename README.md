@@ -19,6 +19,53 @@ npm run tauri dev   # or: npm run tauri build
 
 Wallpapers live in `~/Pictures/Wallpapers`. The app shows a grid of everything there. You can also paste an image URL to preview and download it.
 
+## Flake Usage
+
+The flake provides a dev shell and a Nix package.
+
+```sh
+# Enter the dev shell (cargo, node, tauri-cli, etc.)
+nix develop
+
+# Build the app as a Nix package
+nix build
+
+# Run the built app directly
+nix run
+```
+
+To use this flake as an input in your own Nix flake:
+
+```nix
+{
+  inputs.wallpaper-switcher.url = "github:your-username/wallpaper-switcher";
+
+  outputs = { self, nixpkgs, wallpaper-switcher, ... }: {
+    # Add the package to a NixOS system
+    nixosConfigurations."your-host" = nixpkgs.lib.nixosSystem {
+      modules = [
+        ({ pkgs, ... }: {
+          environment.systemPackages = [
+            wallpaper-switcher.packages.${pkgs.system}.default
+          ];
+        })
+      ];
+    };
+
+    # Or add it via home-manager
+    homeConfigurations."your-user" = home-manager.lib.homeManagerConfiguration {
+      modules = [
+        ({ pkgs, ... }: {
+          home.packages = [
+            wallpaper-switcher.packages.${pkgs.system}.default
+          ];
+        })
+      ];
+    };
+  };
+}
+```
+
 ## Tech Stack
 
 - **Shell:** Tauri v2
