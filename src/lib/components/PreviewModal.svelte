@@ -44,11 +44,13 @@
     onkeydown={(e: KeyboardEvent) => e.key === "Escape" && onClose()}
 >
     <div
-        class="relative w-full aspect-16/10 flex flex-col bg-neutral-850 rounded-xl overflow-hidden shadow-2xl"
+        class="relative w-full aspect-16/10 flex flex-col bg-neutral-850 rounded-xl shadow-2xl overflow-hidden"
     >
         <!-- Image -->
 
-        <img src={imageSrc} alt={entry.name} class="size-full rounded-lg" />
+        <div class="grow overflow-hidden p-4">
+            <img src={imageSrc} alt={entry.name} class="size-full rounded-lg object-cover" />
+        </div>
 
         <!-- Bottom bar -->
         <div

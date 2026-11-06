@@ -1,5 +1,6 @@
 <script lang="ts">
   import { invoke } from "@tauri-apps/api/core";
+  import Icon from "@iconify/svelte";
 
   interface WallpaperEntry {
     name: string;
@@ -73,7 +74,7 @@
   onclick={handleBackdropClick}
   onkeydown={(e: KeyboardEvent) => e.key === "Escape" && onClose()}
 >
-  <div class="relative w-full bg-neutral-850 rounded-xl overflow-hidden shadow-2xl flex flex-col">
+  <div class="relative w-full max-w-lg bg-neutral-850 rounded-xl overflow-hidden shadow-2xl flex flex-col">
     <!-- Header -->
     <div class="flex items-center justify-between px-5 py-3 border-b border-neutral-750">
       <h2 class="text-sm font-semibold text-neutral-200">Download from Web</h2>
@@ -82,9 +83,7 @@
         aria-label="Close"
         class="text-neutral-500 hover:text-neutral-300 transition-colors"
       >
-        <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-          <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
-        </svg>
+        <Icon icon="ph:x" class="w-4 h-4" />
       </button>
     </div>
 
@@ -110,10 +109,7 @@
           <img src={previewSrc} alt="Preview" class="w-full h-full object-contain" />
         {:else}
           <div class="text-center text-neutral-600">
-            <svg class="w-10 h-10 mx-auto mb-2" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1">
-              <path stroke-linecap="round" stroke-linejoin="round"
-                d="M2.25 15.75l5.159-5.159a2.25 2.25 0 013.182 0l5.159 5.159m-1.5-1.5l1.409-1.409a2.25 2.25 0 013.182 0l2.909 2.909M3.75 21h16.5A2.25 2.25 0 0022.5 18.75V5.25A2.25 2.25 0 0020.25 3H3.75A2.25 2.25 0 001.5 5.25v13.5A2.25 2.25 0 003.75 21z" />
-            </svg>
+            <Icon icon="ph:image" class="w-10 h-10 mx-auto mb-2" />
             <p class="text-xs">Enter a URL to preview</p>
           </div>
         {/if}
