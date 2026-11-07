@@ -29,6 +29,11 @@ Wallpapers live in `~/Pictures/Wallpapers`. The app shows a grid of everything t
 
 ## Flake Usage
 
+> [!WARNING]  
+> It will take *a while* to compile.
+> Tauri v2 currently has issues with extremely long compile times
+> and I have not found a free + sustainable way to mitigate this.
+
 The flake provides a dev shell and a Nix package.
 
 ```sh
