@@ -31,8 +31,8 @@ Wallpapers live in `~/Pictures/Wallpapers`. The app shows a grid of everything t
 
 > [!WARNING]  
 > It will take *a while* to compile.
-> Tauri v2 currently has issues with extremely long compile times
-> and I have not found a free + sustainable way to mitigate this.
+> Tauri v2 currently has issues with extremely long compile times.
+> This has been partially mitigated by through the cachix binary cache.
 
 The flake provides a dev shell and a Nix package.
 
@@ -42,6 +42,10 @@ nix develop
 
 # Build the app as a Nix package
 nix build
+
+# Build and push to cachix
+nix build .#default --no-link --print-out-paths \
+  | cachix push ultraflame4
 
 # Run the built app directly
 nix run
