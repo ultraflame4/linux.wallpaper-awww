@@ -1,6 +1,14 @@
 {
   inputs.nixpkgs.url = "github:NixOS/nixpkgs/nixos-unstable";
   inputs.flake-utils.url = "github:numtide/flake-utils";
+
+  nixConfig = {
+    extra-substituters = [ "https://ultraflame4.cachix.org" ];
+    extra-trusted-substituters = [ "https://ultraflame4.cachix.org" ];
+    extra-trusted-public-keys = [
+      "ultraflame4.cachix.org-1:PcGRhKKbj0tBNtv/wyRw8AF/Vk+AFS/DhO7fujE5RVo="
+    ];
+  };
   outputs =
     {
       self,
